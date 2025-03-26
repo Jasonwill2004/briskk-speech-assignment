@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+openai-whisper
+pydub
+numpy
+torch
+websockets
+python-multipart
