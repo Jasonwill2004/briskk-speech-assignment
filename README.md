@@ -84,6 +84,7 @@ A real-time speech recognition and search suggestion system built with FastAPI, 
 
 
 ## Video Explanation
+[Video explanation](https://drive.google.com/file/d/14tNKwCtQJr8fWO5xSR1ggaNXqSVtymw7/view?usp=sharing)
 
 
 ## 🛠️ API Endpoints
