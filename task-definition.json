@@ -1,0 +1,44 @@
+{
+  "family": "speech-search",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::924833783315:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::924833783315:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+      {
+          "name": "speech-search",
+          "image": "924833783315.dkr.ecr.eu-north-1.amazonaws.com/speech-search:latest",
+          "portMappings": [
+              {
+                  "containerPort": 8000,
+                  "hostPort": 8000,
+                  "protocol": "tcp"
+              }
+          ],
+          "essential": true,
+          "environment": [
+              {
+                  "name": "PYTHONUNBUFFERED",
+                  "value": "1"
+              }
+          ],
+          "healthCheck": {
+              "command": ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"],
+              "interval": 30,
+              "timeout": 5,
+              "retries": 3,
+              "startPeriod": 60
+          },
+          "logConfiguration": {
+              "logDriver": "awslogs",
+              "options": {
+                  "awslogs-group": "/ecs/speech-search",
+                  "awslogs-region": "eu-north-1",
+                  "awslogs-stream-prefix": "ecs"
+              }
+          }
+      }
+  ]
+}

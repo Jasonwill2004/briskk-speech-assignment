@@ -14,8 +14,31 @@ from typing import List, Dict, Any
 import json
 import time
 from collections import Counter
+import signal
+import sys
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+app = FastAPI(
+    title="Speech-to-Text Search API",
+    description="Real-time speech recognition and search suggestions API",
+    version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://speech-search-alb-607098999.eu-north-1.elb.amazonaws.com:8000",
+        "ws://speech-search-alb-607098999.eu-north-1.elb.amazonaws.com:8000",
+        "*"  # Allow all origins for testing (remove in production)
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS", "PATCH", "DELETE", "PUT"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +72,14 @@ search_embeddings = {
 user_history = {
     "default_user": ["red dress", "jackets", "winter collection"]
 }
+
+# Add shutdown handler
+def handle_shutdown(signum, frame):
+    logger.info("Received shutdown signal, closing...")
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, handle_shutdown)
+signal.signal(signal.SIGINT, handle_shutdown)
 
 def convert_to_wav(input_file_path: str, output_file_path: str):
     """Convert non-WAV audio files to WAV format using pydub."""
@@ -167,6 +198,16 @@ def get_suggestions(query: str, user_id: str = "default_user") -> List[str]:
     ]
     
     return fallback_suggestions
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "version": "1.0.0",
+        "service": "speech-search",
+        "timestamp": time.time()
+    }
 
 @app.get("/")
 def read_root():
@@ -317,4 +358,10 @@ async def speech_to_search(websocket: WebSocket):
 
         
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=8000,
+        log_level="info",
+        access_log=True
+    )
